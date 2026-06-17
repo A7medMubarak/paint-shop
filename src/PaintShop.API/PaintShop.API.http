@@ -1,0 +1,6 @@
+@PaintShop.API_HostAddress = http://localhost:5170
+
+GET {{PaintShop.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

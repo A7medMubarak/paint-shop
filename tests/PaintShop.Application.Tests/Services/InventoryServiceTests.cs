@@ -122,4 +122,19 @@ public class InventoryServiceTests
         result.Should().ContainSingle();
         result[0].ProductName.Should().Be("Paint B");
     }
+
+    [Fact]
+    public async Task TransferStockAsync_CreatesAuditMovements()
+    {
+        var (products, variants, inventory) = SeedData();
+        var ctx = MockDbContext.Create(products: products, variants: variants, inventoryItems: inventory);
+        var service = new InventoryService(ctx, _options);
+
+        await service.TransferStockAsync(new TransferStockRequest { ProductVariantId = 1, Quantity = 5, FromLocation = 0, ToLocation = 1 }, 1);
+
+        var movements = await ctx.StockMovements.Where(m => m.ProductVariantId == 1).ToListAsync();
+        movements.Should().HaveCount(2);
+        movements.Should().Contain(m => m.QuantityChange == -5 && m.Location == InventoryLocation.Shop);
+        movements.Should().Contain(m => m.QuantityChange == 5 && m.Location == InventoryLocation.Warehouse);
+    }
 }

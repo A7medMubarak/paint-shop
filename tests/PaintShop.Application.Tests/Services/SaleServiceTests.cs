@@ -206,4 +206,66 @@ public class SaleServiceTests
         var cancelledSale = await ctx.Sales.FindAsync(1);
         cancelledSale!.Status.Should().Be(SaleStatus.Cancelled);
     }
+
+    [Fact]
+    public async Task CreateSaleAsync_ForceNegative_AllowsNegativeAndWarns()
+    {
+        var (products, variants, inventory, customers) = SeedData();
+        var ctx = MockDbContext.Create(products: products, variants: variants, inventoryItems: inventory, customers: customers);
+
+        var user = new User { Id = 1, Username = "employee", Role = UserRole.Employee, IsActive = true, CreatedAt = DateTime.Now, PasswordHash = "" };
+        await ctx.Users.AddAsync(user);
+        await ctx.SaveChangesAsync();
+
+        var service = new SaleService(ctx);
+
+        var request = new CreateSaleRequest
+        {
+            CustomerId = 1,
+            ForceNegativeInventory = true,
+            Items = new List<CreateSaleItemRequest>
+            {
+                new() { ProductVariantId = 1, Quantity = 100, UnitPrice = 50 }
+            }
+        };
+
+        var result = await service.CreateSaleAsync(request, 1);
+
+        result.InventoryWarning.Should().BeTrue();
+        result.WarningVariantIds.Should().Contain(1);
+
+        var updatedInventory = await ctx.InventoryItems.FirstAsync(i => i.ProductVariantId == 1 && i.Location == InventoryLocation.Shop);
+        updatedInventory.Quantity.Should().Be(-80);
+    }
+
+    [Fact]
+    public async Task CreateSaleAsync_ResponseContainsPopulatedItems()
+    {
+        var (products, variants, inventory, customers) = SeedData();
+        var ctx = MockDbContext.Create(products: products, variants: variants, inventoryItems: inventory, customers: customers);
+
+        var user = new User { Id = 1, Username = "employee", Role = UserRole.Employee, IsActive = true, CreatedAt = DateTime.Now, PasswordHash = "" };
+        await ctx.Users.AddAsync(user);
+        await ctx.SaveChangesAsync();
+
+        var service = new SaleService(ctx);
+
+        var request = new CreateSaleRequest
+        {
+            CustomerId = 1,
+            DiscountAmount = 0,
+            Items = new List<CreateSaleItemRequest>
+            {
+                new() { ProductVariantId = 1, Quantity = 3, UnitPrice = 45 }
+            }
+        };
+
+        var result = await service.CreateSaleAsync(request, 1);
+
+        result.Sale.Items.Should().ContainSingle();
+        result.Sale.Items[0].ProductVariantId.Should().Be(1);
+        result.Sale.Items[0].Quantity.Should().Be(3);
+        result.Sale.Items[0].UnitPrice.Should().Be(45);
+        result.Sale.Items[0].OriginalPrice.Should().Be(50);
+    }
 }

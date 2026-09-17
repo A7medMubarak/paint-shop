@@ -67,7 +67,7 @@ export default function UsersPage() {
   const handleResetPassword = async () => {
     if (!newPassword.trim()) { toast.error('Password required'); return; }
     try {
-      await api.patch(`/users/${resetPwdId}/password`, { newPassword });
+      await api.patch(`/users/${resetPwdId}/reset-password`, { newPassword });
       toast.success('Password reset');
       setResetPwdId(null); setNewPassword('');
     } catch { toast.error('Failed'); }

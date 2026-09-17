@@ -78,6 +78,15 @@ public class UserService : IUserService
         await _context.SaveChangesAsync();
     }
 
+    public async Task ResetPasswordAsync(int id, ResetPasswordRequest request)
+    {
+        var user = await _context.Users.FindAsync(id)
+            ?? throw new KeyNotFoundException("User not found");
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        await _context.SaveChangesAsync();
+    }
+
     private static UserDto MapToDto(User user) => new()
     {
         Id = user.Id,

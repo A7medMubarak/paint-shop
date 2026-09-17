@@ -8,5 +8,6 @@ public interface IUserService
     Task<UserDto> CreateEmployeeAsync(CreateEmployeeRequest request);
     Task<UserDto> UpdateAsync(int id, UpdateUserRequest request);
     Task ChangePasswordAsync(int id, ChangePasswordRequest request);
+    Task ResetPasswordAsync(int id, ResetPasswordRequest request);
     Task DeactivateAsync(int id);
 }

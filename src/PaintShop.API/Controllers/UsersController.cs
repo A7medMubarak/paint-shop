@@ -43,6 +43,13 @@ public class UsersController : ControllerBase
         return NoContent();
     }
 
+    [HttpPatch("{id}/reset-password")]
+    public async Task<IActionResult> ResetPassword(int id, [FromBody] ResetPasswordRequest request)
+    {
+        await _userService.ResetPasswordAsync(id, request);
+        return NoContent();
+    }
+
     [HttpPatch("{id}/deactivate")]
     public async Task<IActionResult> Deactivate(int id)
     {

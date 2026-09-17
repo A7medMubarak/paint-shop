@@ -14,6 +14,16 @@ builder.Services.AddAppServices(builder.Configuration);
 builder.Services.AddValidatorsFromAssemblyContaining<PaintShop.Application.Validators.LoginRequestValidator>();
 builder.Services.AddFluentValidationAutoValidation();
 
+var frontendUrls = (builder.Configuration["Frontend:Urls"] ?? "http://localhost:5173")
+    .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy => policy
+        .WithOrigins(frontendUrls)
+        .AllowAnyHeader()
+        .AllowAnyMethod());
+});
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -26,6 +36,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseMiddleware<GlobalExceptionHandler>();
 app.UseHttpsRedirection();
+app.UseCors("Frontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

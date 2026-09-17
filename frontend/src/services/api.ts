@@ -25,8 +25,32 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   return response.json();
 }
 
+async function requestText(endpoint: string, options: RequestInit = {}): Promise<string> {
+  const token = localStorage.getItem('token');
+  const headers: Record<string, string> = {
+    ...(options.headers as Record<string, string>)
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE}${endpoint}`, {
+    ...options,
+    headers
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ error: 'Request failed' }));
+    throw new Error(error.error || `HTTP ${response.status}`);
+  }
+
+  return response.text();
+}
+
 export const api = {
   get: <T>(endpoint: string) => request<T>(endpoint),
+  getText: (endpoint: string) => requestText(endpoint),
   post: <T>(endpoint: string, body?: unknown) =>
     request<T>(endpoint, { method: 'POST', body: JSON.stringify(body) }),
   put: <T>(endpoint: string, body?: unknown) =>

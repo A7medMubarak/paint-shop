@@ -47,7 +47,6 @@ public class AuthServiceTests
         var service = new AuthService(ctx, jwtMock.Object);
 
         var act = () => service.LoginAsync(new LoginRequest { Username = "admin", Password = "WrongPassword" });
-
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("Invalid username or password");
         jwtMock.Verify(x => x.GenerateToken(It.IsAny<User>()), Times.Never);
     }
@@ -63,5 +62,19 @@ public class AuthServiceTests
         var act = () => service.LoginAsync(new LoginRequest { Username = "nonexistent", Password = "Admin123" });
 
         await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("Invalid username or password");
+    }
+
+    [Fact]
+    public async Task LoginAsync_WithDeactivatedUser_ThrowsUnauthorizedAccessException()
+    {
+        var users = new List<User> { CreateTestUser(isActive: false) };
+        var ctx = MockDbContext.Create(users: users);
+        var jwtMock = new Mock<IJwtTokenService>();
+        var service = new AuthService(ctx, jwtMock.Object);
+
+        var act = () => service.LoginAsync(new LoginRequest { Username = "admin", Password = "Admin123" });
+
+        await act.Should().ThrowAsync<UnauthorizedAccessException>().WithMessage("Account is deactivated");
+        jwtMock.Verify(x => x.GenerateToken(It.IsAny<User>()), Times.Never);
     }
 }

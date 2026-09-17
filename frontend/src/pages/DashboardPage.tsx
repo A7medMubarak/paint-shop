@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../services/api';
-import type { DailyReportDto, SaleSummaryDto, LowStockReportDto } from '../types';
+import type { DailyReportDto, SaleSummaryDto, LowStockReportDto, PagedResult } from '../types';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { StatusBadge } from '../components/StatusBadge';
 
@@ -19,12 +19,12 @@ export default function DashboardPage() {
         const [r, ls, rs] = await Promise.all([
           api.get<DailyReportDto>(`/reports/daily?date=${today}`),
           api.get<LowStockReportDto[]>('/reports/low-stock'),
-          api.get<SaleSummaryDto[]>('/sales')
+          api.get<PagedResult<SaleSummaryDto>>('/sales/filtered?Page=1&PageSize=5')
         ]);
         if (!ignore) {
           setReport(r);
           setLowStock(ls);
-          setRecentSales(rs.slice(0, 5));
+          setRecentSales(rs.items.slice(0, 5));
         }
       } catch {
         // silently fail on dashboard

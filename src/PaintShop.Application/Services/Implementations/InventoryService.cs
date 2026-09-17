@@ -260,7 +260,7 @@ public class InventoryService : IInventoryService
             Location = m.Location.ToString(),
             QuantityChange = m.QuantityChange,
             Reason = m.Reason.ToString(),
-            CreatedBy = m.CreatedBy.Username,
+            CreatedBy = m.CreatedBy?.Username ?? "—",
             CreatedAt = m.CreatedAt
         }).ToList();
     }

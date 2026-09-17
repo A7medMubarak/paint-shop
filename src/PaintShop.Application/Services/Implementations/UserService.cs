@@ -46,6 +46,13 @@ public class UserService : IUserService
         var user = await _context.Users.FindAsync(id)
             ?? throw new KeyNotFoundException("User not found");
 
+        if (user.Role == UserRole.Owner)
+        {
+            var activeOwners = await _context.Users.CountAsync(u => u.Role == UserRole.Owner && u.IsActive && u.Id != id);
+            if (activeOwners == 0)
+                throw new InvalidOperationException("Cannot deactivate the last active Owner");
+        }
+
         user.IsActive = false;
         await _context.SaveChangesAsync();
     }
@@ -60,6 +67,13 @@ public class UserService : IUserService
             if (await _context.Users.AnyAsync(u => u.Username == request.Username))
                 throw new InvalidOperationException("Username already exists");
             user.Username = request.Username;
+        }
+
+        if (!string.IsNullOrEmpty(request.Role) && request.Role != user.Role.ToString())
+        {
+            if (!Enum.TryParse<UserRole>(request.Role, out var role))
+                throw new InvalidOperationException("Invalid role");
+            user.Role = role;
         }
 
         await _context.SaveChangesAsync();

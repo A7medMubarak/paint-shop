@@ -107,4 +107,34 @@ public class UserServiceTests
 
         await act.Should().ThrowAsync<KeyNotFoundException>();
     }
+
+    [Fact]
+    public async Task UpdateAsync_WithRole_UpdatesRole()
+    {
+        var users = new List<User>
+        {
+            new() { Id = 1, Username = "user1", Role = UserRole.Employee, IsActive = true, CreatedAt = DateTime.Now, PasswordHash = "" }
+        };
+        var ctx = MockDbContext.Create(users: users);
+        var service = new UserService(ctx);
+
+        var result = await service.UpdateAsync(1, new UpdateUserRequest { Username = "user1", Role = "Owner" });
+
+        result.Role.Should().Be("Owner");
+    }
+
+    [Fact]
+    public async Task DeactivateAsync_LastActiveOwner_ThrowsException()
+    {
+        var users = new List<User>
+        {
+            new() { Id = 1, Username = "admin", Role = UserRole.Owner, IsActive = true, CreatedAt = DateTime.Now, PasswordHash = "" }
+        };
+        var ctx = MockDbContext.Create(users: users);
+        var service = new UserService(ctx);
+
+        var act = () => service.DeactivateAsync(1);
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("Cannot deactivate the last active Owner");
+    }
 }

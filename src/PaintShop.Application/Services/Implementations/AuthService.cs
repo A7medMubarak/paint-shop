@@ -25,6 +25,9 @@ public class AuthService : IAuthService
         if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             throw new UnauthorizedAccessException("Invalid username or password");
 
+        if (!user.IsActive)
+            throw new UnauthorizedAccessException("Account is deactivated");
+
         var token = _jwtTokenService.GenerateToken(user);
 
         return new LoginResponse

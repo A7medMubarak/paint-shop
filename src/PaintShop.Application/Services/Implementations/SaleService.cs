@@ -78,20 +78,22 @@ public class SaleService : ISaleService
         };
 
         _context.Sales.Add(sale);
-        await _context.SaveChangesAsync();
 
+        var saleItems = new List<SaleItem>();
         foreach (var item in aggregatedItems)
         {
             var variant = item.Variant;
-            _context.SaleItems.Add(new SaleItem
+            var saleItem = new SaleItem
             {
-                SaleId = sale.Id,
+                Sale = sale,
                 ProductVariantId = item.ProductVariantId,
                 Quantity = item.Quantity,
                 OriginalPrice = variant.SellingPrice,
                 UnitPrice = item.UnitPrice,
                 ColorCode = item.ColorCode
-            });
+            };
+            saleItems.Add(saleItem);
+            _context.SaleItems.Add(saleItem);
 
             var shopItem = shopItems[item.ProductVariantId];
             shopItem.Quantity -= item.Quantity;
@@ -102,7 +104,7 @@ public class SaleService : ISaleService
                 Location = InventoryLocation.Shop,
                 QuantityChange = -item.Quantity,
                 Reason = StockMovementReason.Sale,
-                ReferenceSaleId = sale.Id,
+                Sale = sale,
                 CreatedByUserId = employeeId,
                 CreatedAt = DateTime.Now
             });
@@ -111,9 +113,11 @@ public class SaleService : ISaleService
         await _context.SaveChangesAsync();
 
         var employeeName = await _context.Users
-            .Where(u => u.Id == employeeId).Select(u => u.Username).FirstAsync();
+            .Where(u => u.Id == employeeId).Select(u => u.Username).FirstOrDefaultAsync()
+            ?? throw new KeyNotFoundException("Employee not found");
         var customerName = await _context.Customers
-            .Where(c => c.Id == request.CustomerId).Select(c => c.Name).FirstAsync();
+            .Where(c => c.Id == request.CustomerId).Select(c => c.Name).FirstOrDefaultAsync()
+            ?? throw new KeyNotFoundException("Customer not found");
 
         var variantDetails = await _context.ProductVariants
             .Include(v => v.Product)
@@ -130,21 +134,21 @@ public class SaleService : ISaleService
             Subtotal = subtotal,
             Status = SaleStatus.Active.ToString(),
             CreatedAt = sale.CreatedAt,
-            Items = sale.Items.Select(i =>
+            Items = saleItems.Select(si =>
             {
-                var v = variantDetails.GetValueOrDefault(i.ProductVariantId);
+                var v = variantDetails.GetValueOrDefault(si.ProductVariantId);
                 return new SaleItemDto
                 {
-                    Id = i.Id,
-                    ProductVariantId = i.ProductVariantId,
+                    Id = si.Id,
+                    ProductVariantId = si.ProductVariantId,
                     ProductName = v?.Product?.Name ?? "",
                     BaseType = v?.BaseType?.ToString(),
                     SizeValue = v?.SizeValue ?? 0,
                     SizeUnit = v?.SizeUnit ?? "",
-                    Quantity = i.Quantity,
-                    OriginalPrice = i.OriginalPrice,
-                    UnitPrice = i.UnitPrice,
-                    ColorCode = i.ColorCode
+                    Quantity = si.Quantity,
+                    OriginalPrice = si.OriginalPrice,
+                    UnitPrice = si.UnitPrice,
+                    ColorCode = si.ColorCode
                 };
             }).ToList()
         };
@@ -204,8 +208,8 @@ public class SaleService : ISaleService
             Items = sales.Select(s => new SaleSummaryDto
             {
                 Id = s.Id,
-                EmployeeName = s.Employee.Username,
-                CustomerName = s.Customer.Name,
+                EmployeeName = s.Employee?.Username ?? "",
+                CustomerName = s.Customer?.Name ?? "",
                 TotalAmount = s.TotalAmount,
                 Status = s.Status.ToString(),
                 CreatedAt = s.CreatedAt,

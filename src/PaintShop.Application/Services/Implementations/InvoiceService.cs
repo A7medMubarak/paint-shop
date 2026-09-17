@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 using Microsoft.EntityFrameworkCore;
 using PaintShop.Application.Services.Interfaces;
@@ -41,9 +42,9 @@ public class InvoiceService : IInvoiceService
         sb.AppendLine("</style></head><body>");
         sb.AppendLine($"<h1>Invoice #{sale.Id}</h1>");
         sb.AppendLine($"<p><strong>Date:</strong> {sale.CreatedAt:yyyy-MM-dd HH:mm}</p>");
-        sb.AppendLine($"<p><strong>Customer:</strong> {sale.Customer.Name}</p>");
-        sb.AppendLine($"<p><strong>Phone:</strong> {sale.Customer.Phone ?? "-"}</p>");
-        sb.AppendLine($"<p><strong>Employee:</strong> {sale.Employee.Username}</p>");
+        sb.AppendLine($"<p><strong>Customer:</strong> {WebUtility.HtmlEncode(sale.Customer?.Name ?? "-")}</p>");
+        sb.AppendLine($"<p><strong>Phone:</strong> {WebUtility.HtmlEncode(sale.Customer?.Phone ?? "-")}</p>");
+        sb.AppendLine($"<p><strong>Employee:</strong> {WebUtility.HtmlEncode(sale.Employee?.Username ?? "-")}</p>");
         sb.AppendLine("<table><thead><tr>");
         sb.AppendLine("<th>Product</th><th>Base</th><th>Size</th><th>Qty</th><th>Price</th><th>Total</th>");
         sb.AppendLine("</tr></thead><tbody>");
@@ -52,7 +53,7 @@ public class InvoiceService : IInvoiceService
         {
             var lineTotal = item.UnitPrice * item.Quantity;
             sb.AppendLine("<tr>");
-            sb.AppendLine($"<td>{item.Variant?.Product?.Name ?? "-"}</td>");
+            sb.AppendLine($"<td>{WebUtility.HtmlEncode(item.Variant?.Product?.Name ?? "-")}</td>");
             sb.AppendLine($"<td>{item.Variant?.BaseType?.ToString() ?? "-"}</td>");
             sb.AppendLine($"<td>{item.Variant?.SizeValue} {item.Variant?.SizeUnit}</td>");
             sb.AppendLine($"<td>{item.Quantity}</td>");

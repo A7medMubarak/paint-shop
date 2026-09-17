@@ -31,8 +31,10 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet("search")]
-    public async Task<ActionResult<List<CustomerDto>>> Search([FromQuery] string q)
+    public async Task<ActionResult<List<CustomerDto>>> Search([FromQuery] string? q)
     {
+        if (string.IsNullOrWhiteSpace(q))
+            return Ok(new List<CustomerDto>());
         return Ok(await _customerService.SearchAsync(q));
     }
 

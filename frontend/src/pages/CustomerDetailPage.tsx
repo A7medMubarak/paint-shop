@@ -48,8 +48,8 @@ export default function CustomerDetailPage() {
   const handleEdit = async () => {
     if (!editName.trim()) { toast.error('Name is required'); return; }
     try {
-      const updated = await api.put<CustomerDetailDto>(`/customers/${id}`, { name: editName, phone: editPhone || undefined });
-      setCustomer(updated);
+      const updated = await api.put<{ id: number; name: string; phone?: string; createdAt: string }>(`/customers/${id}`, { name: editName, phone: editPhone || undefined });
+      setCustomer(prev => prev ? { ...prev, ...updated, recentSales: prev.recentSales } : prev);
       setEditing(false);
       toast.success('Customer updated');
     } catch { toast.error('Failed to update'); }

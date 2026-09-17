@@ -40,8 +40,10 @@ public class ProductsController : ControllerBase
 
     [HttpGet("search")]
     [Authorize(Roles = "Owner,Employee")]
-    public async Task<ActionResult<List<ProductDto>>> Search([FromQuery] string q)
+    public async Task<ActionResult<List<ProductDto>>> Search([FromQuery] string? q)
     {
+        if (string.IsNullOrWhiteSpace(q))
+            return Ok(new List<ProductDto>());
         return Ok(await _productService.SearchAsync(q));
     }
 

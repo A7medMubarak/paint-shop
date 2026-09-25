@@ -25,8 +25,6 @@
 
 ## 📸 Preview
 
-> Screenshots coming soon — the live demo below is fully working.
-
 | Login | Dashboard | Products |
 |-------|-----------|----------|
 | <img src="docs/assets/images/login.png" width="300" alt="Login"> | <img src="docs/assets/images/dashboard.png" width="300" alt="Dashboard"> | <img src="docs/assets/images/products.png" width="300" alt="Products"> |
@@ -34,6 +32,10 @@
 | Create Sale | Inventory | Reports |
 |-------------|-----------|---------|
 | <img src="docs/assets/images/create-sale.png" width="300" alt="Create Sale"> | <img src="docs/assets/images/inventory.png" width="300" alt="Inventory"> | <img src="docs/assets/images/reports.png" width="300" alt="Reports"> |
+
+| Sale Details | Top Selling |
+|--------------|-------------|
+| <img src="docs/assets/images/sale-detail.png" width="300" alt="Sale Details"> | <img src="docs/assets/images/top-selling.png" width="300" alt="Top Selling"> |
 
 ---
 

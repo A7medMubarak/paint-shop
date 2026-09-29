@@ -30,11 +30,13 @@ public class JwtTokenService : IJwtTokenService
             new Claim(ClaimTypes.Role, user.Role.ToString())
         };
 
+        var expiryHours = double.Parse(_configuration["Jwt:ExpiryHours"] ?? "8");
+
         var token = new JwtSecurityToken(
             issuer: _configuration["Jwt:Issuer"] ?? "PaintShop.API",
             audience: _configuration["Jwt:Audience"] ?? "PaintShop.App",
             claims: claims,
-            expires: DateTime.Now.AddDays(1),
+            expires: DateTime.Now.AddHours(expiryHours),
             signingCredentials: credentials
         );
 

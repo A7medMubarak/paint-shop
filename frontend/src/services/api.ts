@@ -1,5 +1,13 @@
 const API_BASE = import.meta.env.VITE_API_URL ?? '';
 
+function handleUnauthorized(): never {
+  localStorage.removeItem('token');
+  localStorage.removeItem('role');
+  localStorage.removeItem('username');
+  window.location.href = '/login';
+  throw new Error('Session expired');
+}
+
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('token');
   const headers: Record<string, string> = {
@@ -15,6 +23,8 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     ...options,
     headers
   });
+
+  if (response.status === 401) handleUnauthorized();
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Request failed' }));
@@ -39,6 +49,8 @@ async function requestText(endpoint: string, options: RequestInit = {}): Promise
     ...options,
     headers
   });
+
+  if (response.status === 401) handleUnauthorized();
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ error: 'Request failed' }));

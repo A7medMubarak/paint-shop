@@ -282,18 +282,37 @@ The `GlobalExceptionHandler` middleware converts exceptions to ProblemDetails (R
     "DefaultConnection": "Server=localhost\\SQLEXPRESS;Database=PaintShop;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true"
   },
   "Jwt": {
-    "Secret": "dev-secret-key-change-in-production",
-    "Issuer": "PaintShop",
-    "Audience": "PaintShop",
-    "ExpiryHours": 24
+    "Issuer": "PaintShop.API",
+    "Audience": "PaintShop.App",
+    "ExpiryHours": "8"
   },
   "Inventory": {
     "DefaultLowStockThreshold": 5.0
+  },
+  "Frontend": {
+    "Urls": "http://localhost:5173"
   }
 }
 ```
 
 **Security notes:**
 - Never commit real secrets to git
-- Use `appsettings.Development.json` with `{ "Jwt": { "Secret": "dev-key" } }` for local dev
-- In production, use environment variables or Azure Key Vault
+- JWT signing key is `Jwt:Key` — set via `appsettings.Development.json` locally, environment variable in production
+- In production, use environment variables
+
+## Deployment
+
+| Component | Service | Details |
+|---|---|---|
+| API + SQL Server | MonsterASP.NET | WebDeploy via GitHub Actions (`.github/workflows/deploy.yml`) |
+| Frontend SPA | Vercel | Auto-deploys on push to `main` |
+| Database | SQL Server | Hosted on MonsterASP.NET (native SQL Server, free tier) |
+| CI/CD | GitHub Actions | Build → Test → WebDeploy (backend), Vercel auto-deploy (frontend) |
+
+**Live URLs:**
+- Frontend: `https://paint-shop-black.vercel.app`
+- API: `https://paintshop.runasp.net`
+
+**Deploy flow:** `git push` to `main` → GitHub Actions runs build + tests → publishes API → WebDeploy sync to MonsterASP.NET → EF Core migrations + seed run on startup. Frontend deploys via Vercel's GitHub integration.
+
+**Note:** No Render.com or Supabase — production runs SQL Server on MonsterASP.NET.
